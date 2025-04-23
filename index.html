@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NicoTV - Lettore M3U</title>
+    <title>ChocoTV - Lettore M3U</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -91,7 +91,7 @@
     </div>
     <header class="bg-gray-900 shadow-lg p-4 flex items-center justify-between flex-wrap flex-shrink-0">
         <a href="#" class="flex items-center text-white no-underline">
-            <span class="text-xl font-bold mr-2">NicoTV</span>
+            <span class="text-xl font-bold mr-2">ChocoTV</span>
             <span class="bg-gray-700 text-orange-400 text-xs px-2 py-0.5 rounded font-mono">v1.9</span>
         </a>
         <div class="flex items-center space-x-4 text-sm mt-2 sm:mt-0 flex-wrap">
@@ -571,7 +571,7 @@
             qualitySelectorContainer.style.display = 'none';
 
             // NUOVO: Gestione Modale Benvenuto
-            const visitedKey = 'nicoTvVisited';
+            const visitedKey = 'ChocoTvVisited';
             const hasVisited = localStorage.getItem(visitedKey);
 
             if (!hasVisited && welcomeModal) {
