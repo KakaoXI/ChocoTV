@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NicoTV - Lettore M3U</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        /* Stile per la scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #111827; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+        /* Stili per bottoni paese e elementi canale */
+        .country-button, .channel-item {
+            cursor: pointer; padding: 8px 12px; margin-bottom: 4px;
+            border-radius: 6px; transition: background-color 0.2s ease, transform 0.1s ease;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .country-button span:last-child, .channel-item span:last-child {
+             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+             flex-grow: 1; font-size: 1rem; line-height: 1.5rem;
+        }
+        .country-button:hover { background-color: #374151; }
+        .channel-item:hover { background-color: #374151; transform: scale(1.02); }
+        .country-button.active, .channel-item.active {
+             background-color: #4b5563; font-weight: bold; transform: scale(1);
+        }
+
+        /* Stile per le bandiere SVG e icone placeholder (a sinistra) */
+        .flag-icon, .placeholder-icon {
+            width: 1.5em; height: 1.125em; line-height: 1.125em;
+            flex-shrink: 0; object-fit: contain; background-color: #4b5563;
+            border-radius: 3px;
+        }
+        .placeholder-icon { text-align: center; color: #d1d5db; }
+
+        /* Stili per selettore qualità */
+        .quality-button {
+            background-color: #374151; color: #fb923c; padding: 4px 10px;
+            margin: 3px; border-radius: 5px; cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            font-size: 0.875rem; border: 1px solid #4b5563;
+        }
+        .quality-button:hover { background-color: #4b5563; color: #fed7aa; }
+        .quality-button.active {
+            background-color: #fb923c; color: #111827; font-weight: bold; border-color: #fb923c;
+        }
+
+        /* Stile per errore di rete evidente */
+        .network-error-message {
+            color: #ef4444; font-size: 1.125rem; font-weight: 700;
+            text-align: center; padding: 10px; background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444; border-radius: 6px;
+        }
+        /* Stile per messaggio di retry */
+        .retry-info {
+            font-size: 0.875rem; /* text-sm */
+            color: #fcd34d; /* Giallo ambrato */
+            margin-left: 8px;
+        }
+
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-300 font-sans flex flex-col h-screen">
+
+    <header class="bg-gray-900 shadow-lg p-4 flex items-center justify-between flex-wrap flex-shrink-0">
+        <a href="#" class="flex items-center text-white no-underline">
+            <span class="text-xl font-bold mr-2">NicoTV</span>
+            <span class="bg-gray-700 text-orange-400 text-xs px-2 py-0.5 rounded font-mono">v1.8</span>
+        </a>
+        <div class="flex items-center space-x-4 text-sm mt-2 sm:mt-0 flex-wrap">
+            <span><i class="fas fa-clock mr-1"></i> Lista: Internazionale</span>
+        </div>
+        <input class="bg-gray-800 text-gray-200 placeholder-gray-400 px-3 py-1 rounded-md border border-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent mt-2 sm:mt-0 w-full sm:w-auto" id="searchBox" type="text" placeholder="Cerca canale...">
+    </header>
+
+    <div class="flex flex-1 overflow-hidden gap-2 p-2">
+        <aside class="w-72 bg-gray-900 p-3 overflow-y-auto flex-shrink-0 order-1 sm:order-1 rounded-lg shadow-md">
+             <h3 class="text-lg font-semibold mb-3 text-gray-400 sticky top-0 bg-gray-900 py-2 z-10">Canali</h3>
+             <div id="channelList">
+                 <p class="text-gray-500 text-sm">Seleziona un paese dalla lista a destra.</p>
+             </div>
+        </aside>
+
+        <main class="flex-1 p-4 overflow-y-auto order-2 sm:order-2 flex flex-col items-center">
+            <div class="w-full max-w-6xl">
+                <video id="player" class="w-full bg-black rounded-lg shadow-xl mb-4 aspect-video" controls autoplay>
+                    Il tuo browser non supporta il tag video.
+                </video>
+
+                <div class="bg-gray-900 p-4 rounded-lg shadow-md mb-4">
+                     <div class="flex justify-between items-center mb-2">
+                        <div class="channel-info text-xl font-semibold" id="channelTitle">Nessun canale selezionato</div>
+                     </div>
+                    <p id="statusMessage" class="statusMessage text-sm text-gray-400 transition-all duration-300">Pronto.</p>
+                </div>
+
+                <div class="bg-gray-900 p-4 rounded-lg shadow-md w-full text-sm">
+                    <h4 class="text-md font-semibold mb-2 text-gray-400">Dettagli Canale</h4>
+                    <p id="detailChannelName">Canale: -</p>
+                    <p id="detailChannelGroup" class="mb-3">Gruppo/Paese: -</p>
+                    <div id="qualitySelectorContainer" class="mt-3 border-t border-gray-700 pt-3">
+                         <h5 class="text-sm font-semibold mb-1 text-gray-400">Qualità Video:</h5>
+                         <div id="qualitySelector" class="flex flex-wrap gap-1">
+                              <span class="text-xs text-gray-500">Nessuna opzione disponibile.</span>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <aside class="w-64 bg-gray-900 p-3 overflow-y-auto flex-shrink-0 order-3 sm:order-3 rounded-lg shadow-md">
+             <h3 class="text-lg font-semibold mb-3 text-gray-400 sticky top-0 bg-gray-900 py-2 z-10">Paesi</h3>
+             <div id="countrySelector">
+                 <p class="text-gray-500 text-sm">Caricamento lista...</p>
+             </div>
+        </aside>
+    </div>
+
+    <footer class="bg-gray-900 text-center text-xs text-gray-500 p-3 mt-auto flex-shrink-0 border-t border-gray-700">
+        Creato da Nicolas - GitHub: <a href="https://github.com/NicoIsabella" target="_blank" class="text-orange-400 hover:text-orange-300">@NicoIsabella</a>
+    </footer>
+
+    <script>
+        const m3uUrl = 'index.m3u';
+        let allChannels = {};
+        let currentChannels = [];
+        let hls;
+        let activeCountryButton = null;
+        let activeChannelItem = null;
+        let currentPlayingChannel = null; // Memorizza l'oggetto canale corrente
+        let retryTimeoutId = null; // ID del timeout per la riprova
+
+        // Elementi del DOM
+        const player = document.getElementById('player');
+        const channelList = document.getElementById('channelList');
+        const countrySelector = document.getElementById('countrySelector');
+        const searchBox = document.getElementById('searchBox');
+        const statusMsg = document.getElementById('statusMessage');
+        const channelTitle = document.getElementById('channelTitle');
+        const detailChannelName = document.getElementById('detailChannelName');
+        const detailChannelGroup = document.getElementById('detailChannelGroup');
+        const qualitySelector = document.getElementById('qualitySelector');
+        const qualitySelectorContainer = document.getElementById('qualitySelectorContainer');
+
+        // Mappa Nomi Paesi -> Codici ISO 3166-1 alpha-2 (lowercase)
+        const nameToIsoMap = { /* ... mappa estesa come prima ... */
+            "Italia": "it", "Italy": "it", "Francia": "fr", "France": "fr", "Germania": "de", "Germany": "de",
+            "Spagna": "es", "Spain": "es", "Regno Unito": "gb", "United Kingdom": "gb", "UK": "gb",
+            "Stati Uniti": "us", "United States": "us", "USA": "us", "Svizzera": "ch", "Switzerland": "ch",
+            "Canada": "ca", "Giappone": "jp", "Japan": "jp", "Cina": "cn", "China": "cn", "Russia": "ru",
+            "Brasile": "br", "Brazil": "br", "Argentina": "ar", "Australia": "au", "India": "in",
+            "Turchia": "tr", "Turkey": "tr", "Egitto": "eg", "Egypt": "eg", "Marocco": "ma", "Morocco": "ma",
+            "Albania": "al", "Romania": "ro", "Polonia": "pl", "Poland": "pl", "Grecia": "gr", "Greece": "gr",
+            "Portogallo": "pt", "Portugal": "pt", "Austria": "at", "Belgio": "be", "Belgium": "be",
+            "Olanda": "nl", "Netherlands": "nl", "Irlanda": "ie", "Ireland": "ie", "Afghanistan": "af",
+            "Algeria": "dz", "American Samoa": "as", "Andorra": "ad", "Angola": "ao", "Anguilla": "ai",
+            "Antigua and Barbuda": "ag", "Armenia": "am", "Aruba": "aw", "Azerbaijan": "az", "Bahamas": "bs",
+            "Bahrain": "bh", "Bangladesh": "bd", "Barbados": "bb", "Belarus": "by", "Belize": "bz",
+            "Benin": "bj", "Bermuda": "bm", "Bhutan": "bt", "Bolivia": "bo", "Bonaire": "bq",
+            "Bosnia and Herzegovina": "ba", "Botswana": "bw", "Bouvet Island": "bv",
+            "British Virgin Islands": "vg", "Brunei": "bn", "Bulgaria": "bg", "Burkina Faso": "bf",
+            "Burundi": "bi", "Cambodia": "kh", "Cameroon": "cm", "Cape Verde": "cv", "Cayman Islands": "ky",
+            "Central African Republic": "cf", "Chad": "td", "Chile": "cl", "Colombia": "co", "Comoros": "km",
+            "Cook Islands": "ck", "Costa Rica": "cr", "Croatia": "hr", "Cuba": "cu", "Curacao": "cw",
+            "Cyprus": "cy", "Czech Republic": "cz", "Democratic Republic of the Congo": "cd", "Denmark": "dk",
+            "Djibouti": "dj", "Dominica": "dm", "Dominican Republic": "do", "East Timor": "tl", "Ecuador": "ec",
+            "El Salvador": "sv", "Equatorial Guinea": "gq", "Eritrea": "er", "Estonia": "ee", "Ethiopia": "et",
+            "Falkland Islands": "fk", "Faroe Islands": "fo", "Fiji": "fj", "Finland": "fi",
+            "French Guiana": "gf", "French Polynesia": "pf", "French Southern Territories": "tf", "Gabon": "ga",
+            "Gambia": "gm", "Georgia": "ge", "Ghana": "gh", "Greenland": "gl", "Grenada": "gd",
+            "Guadeloupe": "gp", "Guam": "gu", "Guatemala": "gt", "Guinea": "gn", "Guinea-Bissau": "gw",
+            "Guyana": "gy", "Haiti": "ht", "Honduras": "hn", "Hong Kong": "hk", "Hungary": "hu",
+            "Iceland": "is", "Indonesia": "id", "Iran": "ir", "Iraq": "iq", "Israel": "il",
+            "Ivory Coast": "ci", "Jamaica": "jm", "Jordan": "jo", "Kazakhstan": "kz", "Kenya": "ke",
+            "Kiribati": "ki", "Kosovo": "xk", "Kuwait": "kw", "Kyrgyzstan": "kg", "Laos": "la",
+            "Latvia": "lv", "Lebanon": "lb", "Lesotho": "ls", "Liberia": "lr", "Libya": "ly",
+            "Liechtenstein": "li", "Lithuania": "lt", "Luxembourg": "lu", "Macao": "mo", "Madagascar": "mg",
+            "Malawi": "mw", "Malaysia": "my", "Maldives": "mv", "Mali": "ml", "Malta": "mt",
+            "Marshall Islands": "mh", "Martinique": "mq", "Mauritania": "mr", "Mauritius": "mu", "Mayotte": "yt",
+            "Mexico": "mx", "Micronesia": "fm", "Moldova": "md", "Monaco": "mc", "Mongolia": "mn",
+            "Montenegro": "me", "Montserrat": "ms", "Mozambique": "mz", "Myanmar": "mm", "Namibia": "na",
+            "Nauru": "nr", "Nepal": "np", "New Caledonia": "nc", "New Zealand": "nz", "Nicaragua": "ni",
+            "Niger": "ne", "Nigeria": "ng", "Niue": "nu", "Norfolk Island": "nf", "North Korea": "kp",
+            "North Macedonia": "mk", "Northern Mariana Islands": "mp", "Norway": "no", "Oman": "om",
+            "Pakistan": "pk", "Palau": "pw", "Palestine": "ps", "Panama": "pa", "Papua New Guinea": "pg",
+            "Paraguay": "py", "Peru": "pe", "Philippines": "ph", "Pitcairn Islands": "pn", "Puerto Rico": "pr",
+            "Qatar": "qa", "Republic of the Congo": "cg", "Reunion": "re", "Rwanda": "rw",
+            "Saint Barthélemy": "bl", "Saint Helena": "sh", "Saint Kitts and Nevis": "kn", "Saint Lucia": "lc",
+            "Saint Martin": "mf", "Saint Pierre and Miquelon": "pm", "Saint Vincent and the Grenadines": "vc",
+            "Samoa": "ws", "San Marino": "sm", "Sao Tome and Principe": "st", "Saudi Arabia": "sa",
+            "Senegal": "sn", "Serbia": "rs", "Seychelles": "sc", "Sierra Leone": "sl", "Singapore": "sg",
+            "Sint Maarten": "sx", "Slovakia": "sk", "Slovenia": "si", "Solomon Islands": "sb", "Somalia": "so",
+            "South Africa": "za", "South Georgia and the South Sandwich Islands": "gs", "South Korea": "kr",
+            "South Sudan": "ss", "Sri Lanka": "lk", "Sudan": "sd", "Suriname": "sr", "Swaziland": "sz",
+            "Sweden": "se", "Syria": "sy", "Taiwan": "tw", "Tajikistan": "tj", "Tanzania": "tz",
+            "Thailand": "th", "Togo": "tg", "Tokelau": "tk", "Tonga": "to", "Trinidad and Tobago": "tt",
+            "Tunisia": "tn", "Turkmenistan": "tm", "Turks and Caicos Islands": "tc", "Tuvalu": "tv",
+            "U.S. Virgin Islands": "vi", "Uganda": "ug", "Ukraine": "ua", "United Arab Emirates": "ae",
+            "Uruguay": "uy", "Uzbekistan": "uz", "Vanuatu": "vu", "Vatican City": "va", "Venezuela": "ve",
+            "Vietnam": "vn", "Wallis and Futuna": "wf", "Western Sahara": "eh", "Yemen": "ye", "Zambia": "zm",
+            "Zimbabwe": "zw", "Internazionali": null, "International": null, "News": null, "Sport": null,
+            "Musica": null, "Music": null, "Film": null, "Movies": null, "Documentari": null, "Bambini": null,
+            "Kids": null, "Altro": null, "Other": null
+        };
+        // Icone Font Awesome per categorie generiche o fallback
+        const categoryIcons = { /* ... mappa icone come prima ... */
+             "Internazionali": "fa-globe", "International": "fa-globe", "News": "fa-newspaper", "Sport": "fa-futbol",
+            "Musica": "fa-music", "Music": "fa-music", "Film": "fa-film", "Movies": "fa-film", "Documentari": "fa-book-atlas",
+            "Bambini": "fa-child", "Kids": "fa-child", "Altro": "fa-tv", "Other": "fa-tv", "fallback": "fa-question-circle"
+        };
+
+        /** Analizza il contenuto M3U */
+        function parseM3U(text) { /* ... logica parsing invariata ... */
+             const lines = text.split('\n');
+            let currentChannel = { name: '', logo: '', group: '', url: '' };
+            let channelsFound = 0;
+
+            lines.forEach(line => {
+                line = line.trim();
+                if (line.startsWith('#EXTINF')) {
+                    currentChannel = { name: '', logo: '', group: 'Altro', url: '' };
+                    const logoMatch = line.match(/tvg-logo="([^"]+)"/);
+                    const groupMatch = line.match(/group-title="([^"]+)"/);
+                    currentChannel.logo = logoMatch ? logoMatch[1] : '';
+                    currentChannel.group = groupMatch ? groupMatch[1].trim() : 'Altro';
+                    const nameMatch = line.match(/,(.+)$/);
+                    currentChannel.name = nameMatch ? nameMatch[1].trim() : 'Sconosciuto';
+                } else if (line.length > 0 && !line.startsWith('#') && currentChannel.name) {
+                    currentChannel.url = line;
+                    const groupingKey = currentChannel.group;
+                    if (!allChannels[groupingKey]) { allChannels[groupingKey] = []; }
+                    allChannels[groupingKey].push({ ...currentChannel });
+                    channelsFound++;
+                    currentChannel = { name: '', logo: '', group: '', url: '' };
+                }
+            });
+
+            console.log(`Trovati ${channelsFound} canali in ${Object.keys(allChannels).length} paesi/gruppi.`);
+            if (channelsFound === 0) {
+                 statusMsg.textContent = "Nessun canale trovato nel file M3U.";
+                 countrySelector.innerHTML = '<p class="text-red-500">Nessun paese/gruppo trovato.</p>';
+                 channelList.innerHTML = '<p class="text-red-500">Nessun canale trovato.</p>';
+                 qualitySelectorContainer.style.display = 'none';
+            } else {
+                renderCountries();
+                const firstCountry = Object.keys(allChannels).sort()[0];
+                if(firstCountry) {
+                    renderChannels(firstCountry);
+                     const firstCountryButton = countrySelector.querySelector('.country-button');
+                     if (firstCountryButton) { setActiveCountryButton(firstCountryButton); }
+                } else {
+                     channelList.innerHTML = '<p class="text-gray-500 text-sm">Nessun canale disponibile.</p>';
+                }
+                 qualitySelectorContainer.style.display = 'none';
+            }
+        }
+
+        /** Imposta il bottone del paese attivo */
+        function setActiveCountryButton(buttonElement) { /* ... invariata ... */
+             if (activeCountryButton) { activeCountryButton.classList.remove('active', 'bg-gray-700', 'font-bold'); }
+            activeCountryButton = buttonElement;
+            activeCountryButton.classList.add('active', 'bg-gray-700', 'font-bold');
+        }
+
+        /** Imposta l'elemento del canale attivo */
+        function setActiveChannelItem(channelElement) { /* ... invariata ... */
+              if (activeChannelItem) { activeChannelItem.classList.remove('active', 'bg-gray-700', 'font-bold'); }
+             activeChannelItem = channelElement;
+             activeChannelItem.classList.add('active', 'bg-gray-700', 'font-bold');
+        }
+
+        /** Popola la sidebar destra con paesi e bandiere (a sinistra) */
+        function renderCountries() { /* ... logica bandiere/icone invariata ... */
+            countrySelector.innerHTML = '';
+            const sortedCountries = Object.keys(allChannels).sort((a, b) => a.localeCompare(b, 'it', { sensitivity: 'base' }));
+
+            sortedCountries.forEach(countryName => {
+                const btn = document.createElement('div');
+                btn.className = 'country-button block w-full text-left mb-1 hover:bg-gray-800';
+
+                // Aggiungi bandiera SVG o icona placeholder PRIMA
+                const isoCode = nameToIsoMap[countryName];
+                let iconElement;
+                if (isoCode) {
+                    iconElement = document.createElement('img');
+                    iconElement.className = 'flag-icon';
+                    iconElement.src = `https://cdn.jsdelivr.net/gh/lipis/flag-icons/flags/4x3/${isoCode}.svg`;
+                    iconElement.alt = countryName;
+                    iconElement.onerror = function() { this.onerror=null; this.outerHTML = `<span class="placeholder-icon fas ${categoryIcons['fallback'] || 'fa-question-circle'}"></span>`; };
+                } else {
+                    const iconClass = categoryIcons[countryName] || categoryIcons['fallback'] || 'fa-globe';
+                    iconElement = document.createElement('span');
+                    iconElement.className = `placeholder-icon fas ${iconClass}`;
+                }
+                btn.appendChild(iconElement);
+
+                // Aggiungi nome paese/gruppo DOPO
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = countryName;
+                btn.appendChild(nameSpan);
+
+                btn.onclick = () => {
+                    renderChannels(countryName);
+                    setActiveCountryButton(btn);
+                    searchBox.value = '';
+                    detailChannelName.textContent = "Canale: -";
+                    detailChannelGroup.textContent = "Gruppo/Paese: -";
+                    qualitySelector.innerHTML = '<span class="text-xs text-gray-500">Seleziona un canale.</span>';
+                    qualitySelectorContainer.style.display = 'none';
+                    statusMsg.textContent = "Pronto.";
+                    statusMsg.className = 'statusMessage text-sm text-gray-400 transition-all duration-300';
+                    // Cancella eventuale timeout di riprova precedente
+                    if (retryTimeoutId) {
+                        clearTimeout(retryTimeoutId);
+                        retryTimeoutId = null;
+                    }
+                };
+                countrySelector.appendChild(btn);
+            });
+             if (sortedCountries.length === 0) { countrySelector.innerHTML = '<p class="text-gray-500 text-sm">Nessun paese/gruppo trovato.</p>'; }
+        }
+
+        /** Popola la sidebar sinistra con i canali */
+        function renderChannels(countryName, channelsToRender = null) { /* ... logica loghi/nomi invariata ... */
+              channelList.innerHTML = '';
+            currentChannels = channelsToRender ? channelsToRender : allChannels[countryName] || [];
+
+            if (currentChannels.length === 0) {
+                channelList.innerHTML = '<p class="text-gray-500 text-sm">Nessun canale trovato per questo gruppo.</p>';
+                return;
+            }
+
+            currentChannels.forEach(channel => {
+                const div = document.createElement('div');
+                div.className = 'channel-item p-2 rounded-md hover:bg-gray-800 cursor-pointer mb-1 flex items-center gap-3';
+
+                // Logo (se presente)
+                if (channel.logo) {
+                    const img = document.createElement('img');
+                    img.src = channel.logo;
+                    img.alt = '';
+                    img.className = 'w-10 h-10 object-contain flex-shrink-0 bg-gray-700 rounded-md';
+                    img.onerror = (e) => { e.target.style.display='none'; };
+                    div.appendChild(img);
+                } else {
+                     const placeholder = document.createElement('div');
+                     placeholder.className = 'w-10 h-10 flex-shrink-0 bg-gray-700 rounded-md flex items-center justify-center';
+                     placeholder.innerHTML = '<i class="fas fa-tv text-gray-500 text-lg"></i>';
+                     div.appendChild(placeholder);
+                }
+
+                // Nome Canale
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = channel.name;
+                div.appendChild(nameSpan);
+
+                div.onclick = () => {
+                    playChannel(channel); // Chiama playChannel con l'oggetto canale
+                    setActiveChannelItem(div);
+                }
+                channelList.appendChild(div);
+            });
+        }
+
+        /** Aggiorna l'UI del selettore qualità */
+        function updateQualitySelectorUI(currentLevelIndex) { /* ... invariata ... */
+             const buttons = qualitySelector.querySelectorAll('.quality-button');
+            buttons.forEach(button => {
+                const level = parseInt(button.getAttribute('data-level-index'), 10);
+                button.classList.toggle('active', level === currentLevelIndex);
+            });
+        }
+
+        /** Tenta di ricaricare lo stream corrente */
+        function attemptStreamRetry() {
+            if (!currentPlayingChannel || !hls) {
+                console.log("Nessun canale attivo per riprovare o HLS non inizializzato.");
+                return;
+            }
+            console.log(`Tentativo di riconnessione a: ${currentPlayingChannel.name}`);
+            statusMsg.textContent = `⚠️ Errore di Rete per "${currentPlayingChannel.name}". Riprovo...`;
+            statusMsg.className = 'statusMessage network-error-message transition-all duration-300'; // Mantieni messaggio errore durante retry
+
+            // Distruggi l'istanza precedente e ricreala
+            if (hls) {
+                hls.destroy();
+            }
+            // Ricrea l'istanza HLS e riprova a caricare
+            // Usiamo una funzione separata per evitare duplicazione codice
+            setupAndPlayHLS(currentPlayingChannel);
+        }
+
+        /** Configura e avvia HLS.js per un canale */
+        function setupAndPlayHLS(channel) {
+            if (!Hls.isSupported()) {
+                 statusMsg.textContent = 'Il tuo browser non supporta HLS.';
+                 statusMsg.className = 'statusMessage text-sm text-red-500 transition-all duration-300';
+                 console.error('HLS non supportato.');
+                 qualitySelectorContainer.style.display = 'none';
+                 return;
+            }
+
+             console.log(`Configurazione HLS per: ${channel.url}`);
+             // Pulisci timeout precedente se esiste
+             if (retryTimeoutId) {
+                 clearTimeout(retryTimeoutId);
+                 retryTimeoutId = null;
+             }
+
+             hls = new Hls({
+                 // Configurazione robusta
+                 abrEwmaDefaultEstimate: 500000,
+                 startLevel: -1,
+                 capLevelToPlayerSize: true,
+                 maxBufferLength: 30,
+                 maxMaxBufferLength: 60,
+                 // Aumenta tentativi interni di HLS.js
+                 manifestLoadingMaxRetry: 4, // Default 1
+                 manifestLoadingRetryDelay: 1000, // Default 1000
+                 levelLoadingMaxRetry: 4, // Default 4
+                 levelLoadingRetryDelay: 1000, // Default 1000
+                 // Timeout più lunghi
+                 manifestLoadingTimeOut: 15000, // ms
+                 levelLoadingTimeOut: 15000, // ms
+                 fragLoadingTimeOut: 20000, // ms
+             });
+
+             // Gestione Eventi Qualità
+             hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => { /* ... come prima ... */
+                  console.log("Manifest HLS caricato.");
+                  statusMsg.textContent = `Manifest caricato. Avvio riproduzione...`;
+                  statusMsg.className = 'statusMessage text-sm text-green-400 transition-all duration-300';
+
+                  qualitySelector.innerHTML = '';
+                  if (data.levels.length > 1) {
+                      qualitySelectorContainer.style.display = 'block';
+                      const autoButton = document.createElement('button');
+                      autoButton.className = 'quality-button';
+                      autoButton.textContent = 'Auto';
+                      autoButton.setAttribute('data-level-index', '-1');
+                      autoButton.onclick = () => { hls.currentLevel = -1; };
+                      qualitySelector.appendChild(autoButton);
+
+                      data.levels.forEach((level, index) => {
+                          const qualityButton = document.createElement('button');
+                          qualityButton.className = 'quality-button';
+                          const qualityLabel = level.height ? `${level.height}p` : `${Math.round(level.bitrate / 1000)}kbps`;
+                          qualityButton.textContent = qualityLabel;
+                          qualityButton.setAttribute('data-level-index', index.toString());
+                          qualityButton.onclick = () => { hls.currentLevel = index; };
+                          qualitySelector.appendChild(qualityButton);
+                      });
+                      updateQualitySelectorUI(hls.currentLevel);
+                  } else {
+                       qualitySelector.innerHTML = '<span class="text-xs text-gray-500">Qualità unica disponibile.</span>';
+                       qualitySelectorContainer.style.display = 'block';
+                  }
+                  player.play().then(() => {
+                       statusMsg.textContent = `In riproduzione: ${channel.name}`;
+                       statusMsg.className = 'statusMessage text-sm text-gray-400 transition-all duration-300';
+                  }).catch(e => {
+                      console.error("Errore avvio riproduzione:", e);
+                      statusMsg.textContent = `Errore player: ${e.message}`;
+                      statusMsg.className = 'statusMessage text-sm text-red-500 transition-all duration-300';
+                  });
+             });
+
+             hls.on(Hls.Events.LEVEL_SWITCHED, (event, data) => { /* ... come prima ... */
+                  console.log(`HLS level switched to index: ${data.level}`);
+                  updateQualitySelectorUI(data.level);
+             });
+
+             // Gestione Errori HLS con Riprova su Network Error Fatale
+             hls.on(Hls.Events.ERROR, (event, data) => {
+                 console.error('Errore HLS:', data);
+                 let userMessage = `Errore caricamento: ${channel.name}`;
+                 let messageClass = 'statusMessage text-sm text-red-400 transition-all duration-300';
+                 let shouldRetry = false;
+
+                 if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+                     userMessage = `⚠️ Errore di Rete: Impossibile collegarsi a "${channel.name}".`;
+                     messageClass = 'statusMessage network-error-message transition-all duration-300';
+                     console.error("Network Error Details:", data.details);
+                     // Riprova solo se l'errore è fatale (HLS ha già provato internamente)
+                     if (data.fatal) {
+                         shouldRetry = true;
+                         userMessage += ` <span class="retry-info">(Riprovo tra 10 secondi...)</span>`;
+                     } else {
+                          userMessage += ` (Tentativo interno HLS in corso...)`; // Informa sui tentativi interni
+                     }
+                 } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+                     userMessage += ` (Errore Media: ${data.details})`;
+                 } else {
+                      userMessage += ` (Dettagli: ${data.details})`;
+                 }
+
+                 statusMsg.innerHTML = userMessage; // Usa innerHTML per lo span di retry
+                 statusMsg.className = messageClass;
+
+                 if (data.fatal) {
+                     console.error("Errore HLS Fatale:", data.details);
+                     qualitySelector.innerHTML = '<span class="text-xs text-red-500">Errore caricamento stream.</span>';
+                     qualitySelectorContainer.style.display = 'block';
+
+                     // Distruggi istanza SOLO se NON è un errore di rete fatale che vogliamo riprovare
+                     if (!shouldRetry) {
+                          if(hls) hls.destroy();
+                          currentPlayingChannel = null; // Non c'è più un canale in riproduzione/tentativo
+                     }
+                 }
+
+                 // *** NUOVO: Avvia timeout per riprovare se necessario ***
+                 if (shouldRetry) {
+                      // Pulisci eventuale timeout precedente per sicurezza
+                      if (retryTimeoutId) clearTimeout(retryTimeoutId);
+                      // Imposta nuovo timeout
+                      retryTimeoutId = setTimeout(attemptStreamRetry, 10000); // Riprova dopo 10 secondi
+                 }
+             });
+
+             hls.loadSource(channel.url);
+             hls.attachMedia(player);
+        }
+
+
+        /** Avvia la riproduzione del canale selezionato */
+        function playChannel(channel) {
+            // Pulisci eventuale timeout di riprova precedente
+            if (retryTimeoutId) {
+                clearTimeout(retryTimeoutId);
+                retryTimeoutId = null;
+                console.log("Timeout di riprova annullato per cambio canale.");
+            }
+
+            // Memorizza il canale corrente
+            currentPlayingChannel = channel;
+
+            statusMsg.textContent = `Caricamento: ${channel.name}...`;
+            statusMsg.className = 'statusMessage text-sm text-gray-400 transition-all duration-300';
+            channelTitle.textContent = channel.name;
+            detailChannelName.textContent = `Canale: ${channel.name || '-'}`;
+            detailChannelGroup.textContent = `Gruppo/Paese: ${channel.group || '-'}`;
+            qualitySelector.innerHTML = '<span class="text-xs text-gray-500">Caricamento opzioni...</span>';
+            qualitySelectorContainer.style.display = 'none';
+
+            // Distruggi istanza HLS precedente se esiste
+            if (hls) {
+                hls.destroy();
+            }
+
+            // Usa la funzione separata per configurare e avviare HLS
+            setupAndPlayHLS(channel);
+
+            // Gestione fallback per player nativo (non ha retry persistente)
+            if (!Hls.isSupported() && player.canPlayType('application/vnd.apple.mpegurl')) {
+                console.log(`Tentativo di riproduzione HLS nativa: ${channel.url}`);
+                player.src = channel.url;
+                player.removeEventListener('loadedmetadata', playNative); // Rimuovi listener precedenti
+                player.removeEventListener('error', handleNativeError); // Rimuovi listener precedenti
+                player.addEventListener('loadedmetadata', playNative);
+                player.addEventListener('error', handleNativeError);
+            }
+        }
+
+        // Funzioni helper per event listener nativi
+        function playNative() {
+             player.play().catch(e => console.error("Errore avvio riproduzione nativa:", e));
+             statusMsg.textContent = `In riproduzione: ${currentPlayingChannel.name}`;
+             statusMsg.className = 'statusMessage text-sm text-gray-400 transition-all duration-300';
+             qualitySelector.innerHTML = '<span class="text-xs text-gray-500">Selezione qualità non supportata dal player nativo.</span>';
+             qualitySelectorContainer.style.display = 'block';
+        }
+        function handleNativeError(e) {
+             console.error('Errore player nativo:', e);
+             statusMsg.textContent = `Errore caricamento nativo: ${currentPlayingChannel.name}`;
+             statusMsg.className = 'statusMessage text-sm text-red-500 transition-all duration-300';
+             qualitySelector.innerHTML = '<span class="text-xs text-red-500">Errore caricamento stream.</span>';
+             qualitySelectorContainer.style.display = 'block';
+        }
+
+
+        /** Filtra i canali */
+        function filterChannels() { /* ... invariata ... */
+             const searchTerm = searchBox.value.toLowerCase().trim();
+            const activeCountryButton = countrySelector.querySelector('.country-button.active');
+            if (!activeCountryButton) return;
+            const countryNameElement = activeCountryButton.querySelector('span:last-child');
+            if (!countryNameElement) return;
+            const countryName = countryNameElement.textContent;
+
+            if (!searchTerm) { renderChannels(countryName); return; }
+            if (!allChannels[countryName]) { console.warn(`Filtro gruppo non esistente: ${countryName}`); return; }
+            const filtered = allChannels[countryName].filter(channel => channel.name.toLowerCase().includes(searchTerm));
+            renderChannels(countryName, filtered);
+        }
+
+        // --- Inizializzazione ---
+        document.addEventListener('DOMContentLoaded', () => { /* ... invariata ... */
+             statusMsg.textContent = 'Caricamento lista M3U...';
+            searchBox.addEventListener('input', filterChannels);
+            qualitySelectorContainer.style.display = 'none';
+
+            fetch(m3uUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error(`Errore HTTP ${response.status} nel caricare ${m3uUrl}.`);
+                    return response.text();
+                })
+                .then(text => {
+                    console.log(`File ${m3uUrl} caricato.`);
+                    statusMsg.textContent = 'Lista M3U caricata. Analisi...';
+                    allChannels = {};
+                    parseM3U(text);
+                })
+                .catch(err => {
+                    console.error(`Errore critico: ${err.message}`);
+                    statusMsg.textContent = `Errore caricamento file M3U: ${err.message}.`;
+                    statusMsg.className = 'statusMessage text-sm text-red-500 transition-all duration-300'; // Errore caricamento file
+                    countrySelector.innerHTML = '<p class="text-red-500">Errore caricamento lista paesi/gruppi.</p>';
+                    channelList.innerHTML = '';
+                    qualitySelectorContainer.style.display = 'none';
+                });
+        });
+    </script>
+
+</body>
+</html>
