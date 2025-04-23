@@ -71,41 +71,31 @@
         #mobilePanel.active { transform: translateY(0); }
         .mobile-toggle-button.active { background-color: #fb923c; color: #111827; }
 
-        /* NUOVO: Stili per il menu lingua */
+        /* Stili per il menu lingua */
         #languageMenu {
-            position: absolute;
-            top: 100%; /* Posiziona sotto il pulsante */
-            right: 0;
-            background-color: #1f2937; /* bg-gray-800 */
-            border: 1px solid #4b5563; /* bg-gray-600 */
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            z-index: 40; /* Sopra altri elementi header ma sotto modale */
-            min-width: 150px; /* Larghezza minima */
-            opacity: 0;
-            transform: translateY(-10px);
-            transition: opacity 0.2s ease, transform 0.2s ease;
-            pointer-events: none; /* Nascosto agli eventi */
+            position: absolute; top: 100%; right: 0;
+            background-color: #1f2937; border: 1px solid #4b5563;
+            border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            z-index: 40; min-width: 150px; opacity: 0;
+            transform: translateY(-10px); transition: opacity 0.2s ease, transform 0.2s ease;
+            pointer-events: none;
         }
-        #languageMenu.active {
-            opacity: 1;
-            transform: translateY(5px); /* Leggero spazio dal pulsante */
-            pointer-events: auto; /* Interagibile */
-        }
+        #languageMenu.active { opacity: 1; transform: translateY(5px); pointer-events: auto; }
         .language-option {
-            display: block;
-            padding: 8px 16px;
-            color: #d1d5db; /* text-gray-300 */
-            cursor: pointer;
-            white-space: nowrap;
-            font-size: 0.875rem; /* text-sm */
+            display: block; padding: 8px 16px; color: #d1d5db;
+            cursor: pointer; white-space: nowrap; font-size: 0.875rem;
         }
-        .language-option:hover {
-            background-color: #374151; /* bg-gray-700 */
-        }
-        .language-option.selected {
-            background-color: #4b5563; /* bg-gray-600 */
-            font-weight: bold;
+        .language-option:hover { background-color: #374151; }
+        .language-option.selected { background-color: #4b5563; font-weight: bold; }
+
+        /* NUOVO: Titolo nel pannello mobile */
+        #mobilePanelTitle {
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 600; /* font-semibold */
+            color: #9ca3af; /* text-gray-400 */
+            margin-bottom: 0.75rem; /* mb-3 */
+            padding-bottom: 0.5rem; /* pb-2 */
+            border-bottom: 1px solid #374151; /* border-b border-gray-700 */
         }
 
     </style>
@@ -121,9 +111,10 @@
         </div>
     </div>
 
-    <header class="bg-gray-900 shadow-lg p-4 flex items-center justify-between flex-wrap flex-shrink-0 z-20 relative"> <a href="#" class="flex items-center text-white no-underline">
+    <header class="bg-gray-900 shadow-lg p-4 flex items-center justify-between flex-wrap flex-shrink-0 z-20 relative">
+        <a href="#" class="flex items-center text-white no-underline">
             <span class="text-xl font-bold mr-2">ChocoTV</span>
-            <span class="bg-gray-700 text-orange-400 text-xs px-2 py-0.5 rounded font-mono">v2.1</span>
+            <span class="bg-gray-700 text-orange-400 text-xs px-2 py-0.5 rounded font-mono">v2.2</span>
         </a>
         <div class="flex items-center space-x-4 text-sm mt-2 sm:mt-0 flex-wrap">
             <span id="listTypeText"><i class="fas fa-clock mr-1"></i> </span>
@@ -192,8 +183,11 @@
     </div>
 
     <div id="mobilePanel" class="fixed bottom-0 left-0 right-0 z-30 bg-gray-900 border-t-2 border-gray-700 shadow-2xl rounded-t-lg md:hidden">
-        <div class="p-4 overflow-y-auto max-h-[60vh]">
-             <div id="mobilePanelContent"> </div>
+        <div class="flex flex-col max-h-[70vh]">
+             <h3 id="mobilePanelTitle" class="p-4 flex-shrink-0"></h3>
+             <div class="p-4 pt-0 overflow-y-auto flex-grow">
+                  <div id="mobilePanelContent"> </div>
+             </div>
         </div>
     </div>
 
@@ -519,7 +513,6 @@
         function getBrowserLanguage() {
             const lang = navigator.language || navigator.userLanguage || 'it';
             const baseLang = lang.split('-')[0].toLowerCase();
-             // Gestione specifico per Cinese Tradizionale
              if (lang.toLowerCase() === 'zh-tw' || lang.toLowerCase() === 'zh-hant' || lang.toLowerCase() === 'zh-hk') {
                  return 'zh-TW';
              }
@@ -528,7 +521,7 @@
 
         function translate(key, params = {}) {
             const langPack = translations[currentLang] || translations['it'];
-            let text = langPack[key] || translations['it'][key] || `[${key}]`; // Mostra chiave se manca traduzione
+            let text = langPack[key] || translations['it'][key] || `[${key}]`;
 
             for (const param in params) {
                 text = text.replace(`{${param}}`, params[param]);
@@ -542,35 +535,66 @@
             document.title = translate('pageTitle');
             document.getElementById('listTypeText').innerHTML = `<i class="fas fa-clock mr-1"></i> ${translate('listType')}`;
             searchBoxDesktop.placeholder = translate('searchPlaceholder');
-            document.getElementById('channelsTitleDesktop').textContent = translate('channelsTitle');
-            document.getElementById('channelsPlaceholderDesktop').textContent = translate('channelsPlaceholder');
-            document.getElementById('countriesTitleDesktop').textContent = translate('countriesTitle');
-            document.getElementById('countriesPlaceholderDesktop').textContent = translate('countriesPlaceholder');
-            document.getElementById('videoUnsupportedText').textContent = translate('videoUnsupported');
-            document.getElementById('channelTitle').textContent = translate('noChannelSelected');
-            document.getElementById('statusMessage').textContent = translate('statusReady');
-            document.getElementById('detailsTitle').textContent = translate('detailsTitle');
-            document.getElementById('detailChannelName').textContent = `${translate('detailChannelPrefix')} -`;
-            document.getElementById('detailChannelGroup').textContent = `${translate('detailGroupPrefix')} -`;
-            document.getElementById('qualityTitle').textContent = translate('qualityTitle');
-            document.getElementById('qualityPlaceholder').textContent = translate('qualityPlaceholder');
+            // CORREZIONE: Assicurati che gli elementi esistano prima di impostare textContent
+            const channelsTitleDesktopEl = document.getElementById('channelsTitleDesktop');
+            if (channelsTitleDesktopEl) channelsTitleDesktopEl.textContent = translate('channelsTitle');
+            const channelsPlaceholderDesktopEl = document.getElementById('channelsPlaceholderDesktop');
+            if (channelsPlaceholderDesktopEl) channelsPlaceholderDesktopEl.textContent = translate('channelsPlaceholder');
+            const countriesTitleDesktopEl = document.getElementById('countriesTitleDesktop');
+            if (countriesTitleDesktopEl) countriesTitleDesktopEl.textContent = translate('countriesTitle');
+            const countriesPlaceholderDesktopEl = document.getElementById('countriesPlaceholderDesktop');
+            if (countriesPlaceholderDesktopEl) countriesPlaceholderDesktopEl.textContent = translate('countriesPlaceholder');
+
+            const videoUnsupportedTextEl = document.getElementById('videoUnsupportedText');
+            if (videoUnsupportedTextEl) videoUnsupportedTextEl.textContent = translate('videoUnsupported');
+            const channelTitleEl = document.getElementById('channelTitle');
+            if (channelTitleEl) channelTitleEl.textContent = translate('noChannelSelected');
+            const statusMessageEl = document.getElementById('statusMessage');
+            if (statusMessageEl) statusMessageEl.textContent = translate('statusReady');
+            const detailsTitleEl = document.getElementById('detailsTitle');
+            if (detailsTitleEl) detailsTitleEl.textContent = translate('detailsTitle');
+            const detailChannelNameEl = document.getElementById('detailChannelName');
+            if (detailChannelNameEl) detailChannelNameEl.textContent = `${translate('detailChannelPrefix')} -`;
+            const detailChannelGroupEl = document.getElementById('detailChannelGroup');
+            if (detailChannelGroupEl) detailChannelGroupEl.textContent = `${translate('detailGroupPrefix')} -`;
+            const qualityTitleEl = document.getElementById('qualityTitle');
+            if (qualityTitleEl) qualityTitleEl.textContent = translate('qualityTitle');
+            const qualityPlaceholderEl = document.getElementById('qualityPlaceholder');
+            if (qualityPlaceholderEl) qualityPlaceholderEl.textContent = translate('qualityPlaceholder');
+
             toggleChannelsButton.innerHTML = translate('toggleChannels');
             toggleCountriesButton.innerHTML = translate('toggleCountries');
             searchBoxMobile.placeholder = translate('searchPlaceholder');
-            document.getElementById('welcomeTitle').textContent = translate('welcomeTitle');
-            document.getElementById('welcomeText1').textContent = translate('welcomeText1');
-            document.getElementById('welcomeText2').textContent = translate('welcomeText2');
-            document.getElementById('closeWelcomeModal').textContent = translate('welcomeButton');
-            document.getElementById('footerCreatedBy').textContent = translate('footerCreatedBy');
 
-            // Aggiorna anche i placeholder se le liste sono già state caricate
-             if (countrySelectorDesktop.querySelector('p')) {
-                 countrySelectorDesktop.querySelector('p').textContent = translate('countriesPlaceholder');
+            const welcomeTitleEl = document.getElementById('welcomeTitle');
+            if (welcomeTitleEl) welcomeTitleEl.textContent = translate('welcomeTitle');
+            const welcomeText1El = document.getElementById('welcomeText1');
+            if (welcomeText1El) welcomeText1El.textContent = translate('welcomeText1');
+            const welcomeText2El = document.getElementById('welcomeText2');
+            if (welcomeText2El) welcomeText2El.textContent = translate('welcomeText2');
+            const closeWelcomeModalEl = document.getElementById('closeWelcomeModal');
+            if (closeWelcomeModalEl) closeWelcomeModalEl.textContent = translate('welcomeButton');
+
+            const footerCreatedByEl = document.getElementById('footerCreatedBy');
+            if (footerCreatedByEl) footerCreatedByEl.textContent = translate('footerCreatedBy');
+
+            // Aggiorna placeholder se le liste sono già caricate e mostrano il placeholder
+             const countryPlaceholderP = countrySelectorDesktop.querySelector('p');
+             if (countryPlaceholderP && countryPlaceholderP.textContent !== translate('noGroupsFoundError')) { // Evita sovrascrittura errore
+                 countryPlaceholderP.textContent = translate('countriesPlaceholder');
              }
-             if (channelListDesktop.querySelector('p')) {
-                 channelListDesktop.querySelector('p').textContent = translate('channelsPlaceholder');
+             const channelPlaceholderP = channelListDesktop.querySelector('p');
+             if (channelPlaceholderP && channelPlaceholderP.textContent !== translate('noChannelsFoundError')) { // Evita sovrascrittura errore
+                 channelPlaceholderP.textContent = translate('channelsPlaceholder');
              }
-             // Rirenderizza le liste attuali per aggiornare il pulsante "Indietro" nel pannello mobile
+
+             // Aggiorna titolo pannello mobile se aperto
+             const mobilePanelTitleEl = document.getElementById('mobilePanelTitle');
+             if (mobilePanelTitleEl && mobilePanel.classList.contains('active')) {
+                 mobilePanelTitleEl.textContent = translate(currentMobilePanel === 'channels' ? 'channelsTitle' : 'countriesTitle');
+             }
+
+             // Rirenderizza le liste attuali per aggiornare il pulsante "Indietro"
              if (currentMobilePanel === 'channels') {
                   const activeCountryButton = activeCountryButtonMobile || activeCountryButtonDesktop;
                   const countryName = activeCountryButton?.querySelector('span:last-child')?.textContent;
@@ -581,10 +605,8 @@
                  renderCountries(mobilePanelContent);
              }
 
-             // Aggiorna menu lingua
              populateLanguageMenu();
         }
-
         // --- Fine Setup I18N ---
 
 
@@ -606,6 +628,7 @@
         const countrySelectorDesktop = document.getElementById('countrySelectorDesktop');
         const mobilePanel = document.getElementById('mobilePanel');
         const mobilePanelContent = document.getElementById('mobilePanelContent');
+        const mobilePanelTitle = document.getElementById('mobilePanelTitle'); // Titolo pannello mobile
         const searchBoxDesktop = document.getElementById('searchBoxDesktop');
         const searchBoxMobile = document.getElementById('searchBoxMobile');
         const statusMsg = document.getElementById('statusMessage');
@@ -618,13 +641,11 @@
         const closeWelcomeModalButton = document.getElementById('closeWelcomeModal');
         const toggleChannelsButton = document.getElementById('toggleChannelsButton');
         const toggleCountriesButton = document.getElementById('toggleCountriesButton');
-        // NUOVO: Elementi menu lingua
         const languageButton = document.getElementById('languageButton');
         const languageMenu = document.getElementById('languageMenu');
 
 
-        // Mappa Nomi Paesi -> Codici ISO 3166-1 alpha-2 (lowercase)
-        const nameToIsoMap = { /* ... mappa estesa come prima ... */
+        const nameToIsoMap = { /* ... mappa come prima ... */
              "Italia": "it", "Italy": "it", "Francia": "fr", "France": "fr", "Germania": "de", "Germany": "de",
             "Spagna": "es", "Spain": "es", "Regno Unito": "gb", "United Kingdom": "gb", "UK": "gb",
             "Stati Uniti": "us", "United States": "us", "USA": "us", "Svizzera": "ch", "Switzerland": "ch",
@@ -683,13 +704,11 @@
             "Musica": null, "Music": null, "Film": null, "Movies": null, "Documentari": null, "Bambini": null,
             "Kids": null, "Altro": null, "Other": null
         };
-        // Icone Font Awesome per categorie generiche o fallback
         const categoryIcons = { /* ... mappa icone come prima ... */
              "Internazionali": "fa-globe", "International": "fa-globe", "News": "fa-newspaper", "Sport": "fa-futbol",
             "Musica": "fa-music", "Music": "fa-music", "Film": "fa-film", "Movies": "fa-film", "Documentari": "fa-book-atlas",
             "Bambini": "fa-child", "Kids": "fa-child", "Altro": "fa-tv", "Other": "fa-tv", "fallback": "fa-question-circle"
         };
-
 
         /** Analizza il contenuto M3U */
         function parseM3U(text) { /* ... come prima, usa translate() per default ... */
@@ -801,6 +820,7 @@
                         renderChannels(countryName, mobilePanelContent);
                         setActiveCountryButton(btn, 'mobile'); currentMobilePanel = 'channels';
                         toggleChannelsButton.classList.add('active'); toggleCountriesButton.classList.remove('active');
+                        mobilePanelTitle.textContent = translate('channelsTitle'); // Aggiorna titolo pannello
                     } else {
                         renderChannels(countryName, channelListDesktop);
                         setActiveCountryButton(btn, 'desktop'); setActiveChannelItem(null, 'desktop');
@@ -827,11 +847,12 @@
 
             if (isMobile) {
                 const backButton = document.createElement('button');
-                backButton.innerHTML = translate('backToCountries');
+                backButton.innerHTML = translate('backToCountries'); // Traduci testo bottone
                 backButton.className = 'list-item-button w-full text-left mb-3 text-orange-400 hover:bg-gray-800';
                 backButton.onclick = () => {
                     renderCountries(mobilePanelContent); currentMobilePanel = 'countries';
                     toggleChannelsButton.classList.remove('active'); toggleCountriesButton.classList.add('active');
+                    mobilePanelTitle.textContent = translate('countriesTitle'); // Aggiorna titolo pannello
                 };
                 targetElement.appendChild(backButton);
             }
@@ -1030,19 +1051,24 @@
         }
 
         /** Apre il pannello mobile */
-        function openMobilePanel(type) { /* ... usa traduzioni ... */
+        function openMobilePanel(type) {
              currentMobilePanel = type;
-            mobilePanelContent.innerHTML = '';
-            mobilePanel.classList.add('active');
-            toggleChannelsButton.classList.toggle('active', type === 'channels');
-            toggleCountriesButton.classList.toggle('active', type === 'countries');
-            if (type === 'channels') {
-                const activeCountryButton = activeCountryButtonMobile || activeCountryButtonDesktop;
-                const countryName = activeCountryButton?.querySelector('span:last-child')?.textContent;
-                if (countryName) { renderChannels(countryName, mobilePanelContent); }
-                 else { mobilePanelContent.innerHTML = `<p class="text-gray-500 text-sm p-4">${translate('selectCountryFirst')}</p>`; }
-            } else { renderCountries(mobilePanelContent); }
+             mobilePanelContent.innerHTML = ''; // Pulisce prima di aggiungere titolo
+             mobilePanelTitle.textContent = translate(type === 'channels' ? 'channelsTitle' : 'countriesTitle'); // Imposta titolo tradotto
+             mobilePanel.classList.add('active');
+             toggleChannelsButton.classList.toggle('active', type === 'channels');
+             toggleCountriesButton.classList.toggle('active', type === 'countries');
+
+             if (type === 'channels') {
+                 const activeCountryButton = activeCountryButtonMobile || activeCountryButtonDesktop;
+                 const countryName = activeCountryButton?.querySelector('span:last-child')?.textContent;
+                 if (countryName) { renderChannels(countryName, mobilePanelContent); }
+                  else { mobilePanelContent.innerHTML = `<p class="text-gray-500 text-sm p-4">${translate('selectCountryFirst')}</p>`; }
+             } else { // type === 'countries'
+                 renderCountries(mobilePanelContent);
+             }
         }
+
 
         /** Chiude il pannello mobile */
         function closeMobilePanel() { /* ... invariata ... */
@@ -1052,33 +1078,33 @@
             toggleCountriesButton.classList.remove('active');
         }
 
-        /** NUOVO: Popola il menu lingua */
-        function populateLanguageMenu() {
-            languageMenu.innerHTML = ''; // Pulisce opzioni precedenti
+        /** Popola il menu lingua */
+        function populateLanguageMenu() { /* ... invariata ... */
+            languageMenu.innerHTML = '';
             Object.keys(translations).forEach(langCode => {
-                const option = document.createElement('a'); // Usa 'a' per semantica menu
-                option.href = '#'; // Evita navigazione
-                option.textContent = translations[langCode].langName || langCode; // Mostra nome lingua
+                const option = document.createElement('a');
+                option.href = '#';
+                option.textContent = translations[langCode].langName || langCode;
                 option.className = 'language-option';
                 option.setAttribute('data-lang', langCode);
                 if (langCode === currentLang) {
-                    option.classList.add('selected'); // Evidenzia lingua corrente
+                    option.classList.add('selected');
                 }
                 option.onclick = (e) => {
                     e.preventDefault();
                     changeLanguage(langCode);
-                    languageMenu.classList.remove('active'); // Chiudi menu dopo selezione
+                    languageMenu.classList.remove('active');
                 };
                 languageMenu.appendChild(option);
             });
         }
 
-        /** NUOVO: Cambia la lingua e aggiorna l'UI */
-        function changeLanguage(langCode) {
-            if (translations[langCode]) {
+        /** Cambia la lingua e aggiorna l'UI */
+        function changeLanguage(langCode) { /* ... invariata ... */
+             if (translations[langCode]) {
                 currentLang = langCode;
-                localStorage.setItem('chocoTvLang', langCode); // Salva preferenza
-                applyTranslations(); // Applica tutte le traduzioni
+                localStorage.setItem('chocoTvLang', langCode);
+                applyTranslations();
                 console.log(`Language changed to: ${langCode}`);
             } else {
                 console.warn(`Language ${langCode} not found in translations.`);
@@ -1122,12 +1148,11 @@
                   if (currentMobilePanel === 'countries') { closeMobilePanel(); } else { openMobilePanel('countries'); }
             });
 
-            // NUOVO: Listener per menu lingua
+            // Listener per menu lingua
             languageButton.addEventListener('click', (e) => {
-                e.stopPropagation(); // Impedisce che il click si propaga al document
+                e.stopPropagation();
                 languageMenu.classList.toggle('active');
             });
-            // Chiudi menu se si clicca fuori
             document.addEventListener('click', (e) => {
                  if (!languageMenu.contains(e.target) && !languageButton.contains(e.target)) {
                     languageMenu.classList.remove('active');
