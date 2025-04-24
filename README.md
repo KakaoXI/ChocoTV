@@ -31,7 +31,7 @@
 
 ### 🧪 Local Testing
 
-If you want to test locally, use Python to serve the files:
+If you want to test locally, use Python in the same folder you put "index.html,index.m3u,favicon.png and apple-touch.icon.png to open the website local:
 
 ```bash
 python -m http.server
