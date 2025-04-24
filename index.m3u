@@ -13472,7 +13472,7 @@ http://vthanh.utako.moe/TV_Asahi/index.m3u8
 #EXTINF:-1 tvg-id="JOBHDTV.jp" tvg-logo="https://i.imgur.com/rUmrruq.png" group-title="Japan",TV Osaka (544p)
 http://luong.utako.moe/tvo/index.m3u8
 #EXTINF:-1 tvg-id="JOTXDTV.jp" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/TV_Tokyo_%28Japanese%29_2023.svg/512px-TV_Tokyo_%28Japanese%29_2023.svg.png" group-title="Japan",TV Tokyo (544p)
-http:http://vthanh.utako.moe/TV_Tokyo/index.m3u8
+https://list.iptvcat.com/my_list/s/f8633ec7af049bd70f493c2827f2aba4.m3u8
 #EXTINF:-1 tvg-id="TVEInternacionalEuropeAsia.es" tvg-logo="https://i.imgur.com/ow1HArj.png" group-title="Japan",TVE Internacional Europe-Asia [Geo-blocked]
 http://rtvelivestream.akamaized.net/rtvesec/int/tvei_eu_main.m3u8
 #EXTINF:-1 tvg-id="Weathernews.jp" tvg-logo="https://i.imgur.com/A8uRSTS.png" group-title="Japan",Weathernews (720p)
