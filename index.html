@@ -20,21 +20,12 @@
 
         /* Stili comuni per bottoni paese e elementi canale */
         .list-item-button {
-            cursor: pointer;
-            /* MODIFICA: Aumentato padding */
-            padding: 10px 14px;
-            margin-bottom: 5px; /* Leggermente più spazio sotto */
-            border-radius: 6px;
-            transition: background-color 0.2s ease, transform 0.1s ease;
-            display: flex;
-            align-items: center;
-            /* MODIFICA: Aumentato gap */
-            gap: 12px;
-            /* MODIFICA: Aumentata dimensione font base */
-            font-size: 1.125rem; /* text-lg */
-            line-height: 1.75rem;
+            cursor: pointer; padding: 10px 14px; margin-bottom: 5px;
+            border-radius: 6px; transition: background-color 0.2s ease, transform 0.1s ease;
+            display: flex; align-items: center; gap: 12px;
+            font-size: 1.125rem; line-height: 1.75rem;
         }
-        .list-item-button span:last-child { /* Nome */
+        .list-item-button span:last-child {
              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
              flex-grow: 1;
         }
@@ -46,10 +37,7 @@
 
         /* Stile per le bandiere SVG e icone placeholder */
         .flag-icon, .placeholder-icon {
-            /* MODIFICA: Icone più grandi */
-            width: 1.75em; /* ~28px se font-size è 1rem */
-            height: 1.3125em; /* Mantiene proporzione 4x3 */
-            line-height: 1.3125em;
+            width: 1.75em; height: 1.3125em; line-height: 1.3125em;
             flex-shrink: 0; object-fit: contain; background-color: #4b5563;
             border-radius: 3px;
         }
@@ -57,14 +45,10 @@
 
         /* Stili per selettore qualità */
         .quality-button {
-            background-color: #374151; color: #fb923c;
-            /* MODIFICA: Padding leggermente aumentato */
-            padding: 5px 12px;
+            background-color: #374151; color: #fb923c; padding: 5px 12px;
             margin: 3px; border-radius: 5px; cursor: pointer;
             transition: background-color 0.2s ease, color 0.2s ease;
-            /* MODIFICA: Font leggermente più grande */
-            font-size: 0.95rem; /* Tra sm e base */
-            border: 1px solid #4b5563;
+            font-size: 0.95rem; border: 1px solid #4b5563;
         }
         .quality-button:hover { background-color: #4b5563; color: #fed7aa; }
         .quality-button.active {
@@ -108,12 +92,17 @@
         .language-option:hover { background-color: #374151; }
         .language-option.selected { background-color: #4b5563; font-weight: bold; }
 
-        /* Titolo nel pannello mobile */
+        /* Titolo nel pannello mobile (ora sticky) */
         #mobilePanelTitle {
-            /* MODIFICA: Titolo pannello più grande */
-            font-size: 1.25rem; /* text-xl */
-            font-weight: 600; color: #9ca3af; margin-bottom: 0.75rem;
-            padding-bottom: 0.5rem; border-bottom: 1px solid #374151;
+            font-size: 1.25rem; font-weight: 600; color: #9ca3af;
+            margin-bottom: 0.75rem; padding-bottom: 0.5rem;
+            border-bottom: 1px solid #374151;
+            /* Aggiunto per sticky */
+            position: sticky;
+            top: 0;
+            background-color: #1f2937; /* Sfondo per coprire contenuto */
+            z-index: 10; /* Assicura che sia sopra il contenuto scrollabile */
+            padding-top: 1rem; /* Aggiunge padding sopra quando è sticky */
         }
 
     </style>
@@ -132,7 +121,7 @@
     <header class="bg-gray-900 shadow-lg p-4 flex items-center justify-between flex-wrap flex-shrink-0 z-20 relative">
         <a href="#" class="flex items-center text-white no-underline">
             <img src="logo.png" alt="ChocoTV Logo" class="h-10 w-auto mr-3"> <span class="text-2xl font-bold mr-2">ChocoTV</span>
-            <span class="bg-gray-700 text-orange-400 text-xs px-2 py-0.5 rounded font-mono">v2.5</span>
+            <span class="bg-gray-700 text-orange-400 text-xs px-2 py-0.5 rounded font-mono">v2.6</span>
         </a>
         <div class="flex items-center space-x-4 text-sm mt-2 sm:mt-0 flex-wrap">
             <span id="listTypeText"><i class="fas fa-clock mr-1"></i> </span>
@@ -149,7 +138,7 @@
 
     <div class="flex flex-col md:flex-row flex-1 overflow-hidden">
         <aside id="channelListContainerDesktop" class="hidden md:flex md:flex-col w-72 bg-gray-900 p-3 overflow-y-auto flex-shrink-0 order-1 rounded-lg shadow-md m-2 md:m-0 md:mr-1">
-             <h3 id="channelsTitleDesktop" class="text-xl font-semibold mb-3 text-gray-400 sticky top-0 bg-gray-900 py-2 z-10"></h3>
+             <h3 id="channelsTitleDesktop" class="text-xl font-semibold mb-3 text-gray-400 sticky top-0 z-10 bg-gray-900 py-2"></h3>
              <div id="channelListDesktop">
                  <p id="channelsPlaceholderDesktop" class="text-gray-500 text-sm"></p>
              </div>
@@ -184,7 +173,7 @@
         </main>
 
         <aside id="countrySelectorContainerDesktop" class="hidden md:flex md:flex-col w-64 bg-gray-900 p-3 overflow-y-auto flex-shrink-0 order-3 rounded-lg shadow-md m-2 md:m-0 md:ml-1">
-             <h3 id="countriesTitleDesktop" class="text-xl font-semibold mb-3 text-gray-400 sticky top-0 bg-gray-900 py-2 z-10"></h3>
+             <h3 id="countriesTitleDesktop" class="text-xl font-semibold mb-3 text-gray-400 sticky top-0 z-10 bg-gray-900 py-2"></h3>
              <div id="countrySelectorDesktop">
                  <p id="countriesPlaceholderDesktop" class="text-gray-500 text-sm"></p>
              </div>
@@ -195,8 +184,7 @@
     <div id="mobilePanel" class="fixed bottom-0 left-0 right-0 z-30 bg-gray-900 border-t-2 border-gray-700 shadow-2xl rounded-t-lg md:hidden">
         <div class="flex flex-col max-h-[70vh]">
              <h3 id="mobilePanelTitle" class="p-4 flex-shrink-0"></h3>
-             <div class="p-4 pt-0 overflow-y-auto flex-grow">
-                  <div id="mobilePanelContent"> </div>
+             <div class="px-4 pb-4 pt-0 overflow-y-auto flex-grow"> <div id="mobilePanelContent"> </div>
              </div>
         </div>
     </div>
@@ -209,7 +197,7 @@
 
     <script>
         // --- I18N Setup ---
-        const translations = {
+        const translations = { /* ... Traduzioni come prima ... */
             // Italiano (Default)
             it: {
                 langName: "Italiano",
@@ -557,10 +545,8 @@
             const videoUnsupportedTextEl = document.getElementById('videoUnsupportedText');
             if (videoUnsupportedTextEl) videoUnsupportedTextEl.textContent = translate('videoUnsupported');
             const channelTitleEl = document.getElementById('channelTitle');
-            // Non aggiornare il titolo se un canale è selezionato
             if (channelTitleEl && !currentPlayingChannel) channelTitleEl.textContent = translate('noChannelSelected');
             const statusMessageEl = document.getElementById('statusMessage');
-            // Non aggiornare messaggio di stato se c'è un errore o sta caricando
             if (statusMessageEl && statusMessageEl.textContent === 'Pronto.' || statusMessageEl.textContent === translations['it'].statusReady) {
                  statusMessageEl.textContent = translate('statusReady');
             }
@@ -572,8 +558,8 @@
             if (detailChannelGroupEl) detailChannelGroupEl.textContent = `${translate('detailGroupPrefix')} ${currentPlayingChannel ? currentPlayingChannel.group : '-'}`;
             const qualityTitleEl = document.getElementById('qualityTitle');
             if (qualityTitleEl) qualityTitleEl.textContent = translate('qualityTitle');
-            const qualityPlaceholderEl = qualitySelector.querySelector('span'); // Seleziona lo span interno
-            if (qualityPlaceholderEl && qualityPlaceholderEl.textContent.includes(translations['it'].qualityPlaceholder.split(' ')[0])) { // Controlla se è il messaggio di placeholder
+            const qualityPlaceholderEl = qualitySelector.querySelector('span');
+            if (qualityPlaceholderEl && qualityPlaceholderEl.textContent.includes(translations['it'].qualityPlaceholder.split(' ')[0])) {
                  qualityPlaceholderEl.textContent = translate('qualityPlaceholder');
             } else if (qualityPlaceholderEl && qualityPlaceholderEl.textContent.includes(translations['it'].qualityUnique.split(' ')[0])) {
                  qualityPlaceholderEl.textContent = translate('qualityUnique');
