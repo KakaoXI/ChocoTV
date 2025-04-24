@@ -92,7 +92,7 @@
         .language-option:hover { background-color: #374151; }
         .language-option.selected { background-color: #4b5563; font-weight: bold; }
 
-        /* Titolo nel pannello mobile (ora sticky) */
+        /* Titolo nel pannello mobile (sticky) */
         #mobilePanelTitle {
             font-size: 1.25rem; font-weight: 600; color: #9ca3af;
             margin-bottom: 0.75rem; padding-bottom: 0.5rem;
@@ -100,9 +100,21 @@
             /* Aggiunto per sticky */
             position: sticky;
             top: 0;
-            background-color: #1f2937; /* Sfondo per coprire contenuto */
-            z-index: 10; /* Assicura che sia sopra il contenuto scrollabile */
-            padding-top: 1rem; /* Aggiunge padding sopra quando è sticky */
+            /* Usa lo stesso colore di sfondo del pannello */
+            background-color: #111827; /* bg-gray-900 */
+            z-index: 10;
+            padding-top: 1rem;
+        }
+
+        /* Assicura che i titoli delle sidebar desktop siano sticky */
+        .sticky-sidebar-title {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+             /* Usa lo stesso colore di sfondo della sidebar */
+            background-color: #111827; /* bg-gray-900 */
+            padding-top: 0.5rem; /* py-2 */
+            padding-bottom: 0.5rem; /* py-2 */
         }
 
     </style>
@@ -120,8 +132,9 @@
 
     <header class="bg-gray-900 shadow-lg p-4 flex items-center justify-between flex-wrap flex-shrink-0 z-20 relative">
         <a href="#" class="flex items-center text-white no-underline">
-            <img src="logo.png" alt="ChocoTV Logo" class="h-10 w-auto mr-3"> <span class="text-2xl font-bold mr-2">ChocoTV</span>
-            <span class="bg-gray-700 text-orange-400 text-xs px-2 py-0.5 rounded font-mono">v2.6</span>
+            <img src="logo.png" alt="ChocoTV Logo" class="h-10 w-auto mr-3">
+            <span class="text-2xl font-bold mr-2">ChocoTV</span>
+            <span class="bg-gray-700 text-orange-400 text-xs px-2 py-0.5 rounded font-mono">v2.65</span>
         </a>
         <div class="flex items-center space-x-4 text-sm mt-2 sm:mt-0 flex-wrap">
             <span id="listTypeText"><i class="fas fa-clock mr-1"></i> </span>
@@ -137,8 +150,8 @@
     </header>
 
     <div class="flex flex-col md:flex-row flex-1 overflow-hidden">
-        <aside id="channelListContainerDesktop" class="hidden md:flex md:flex-col w-72 bg-gray-900 p-3 overflow-y-auto flex-shrink-0 order-1 rounded-lg shadow-md m-2 md:m-0 md:mr-1">
-             <h3 id="channelsTitleDesktop" class="text-xl font-semibold mb-3 text-gray-400 sticky top-0 z-10 bg-gray-900 py-2"></h3>
+        <aside id="channelListContainerDesktop" class="hidden md:flex md:flex-col w-72 bg-gray-900 p-3 overflow-y-auto flex-shrink-0 order-1 rounded-lg shadow-md m-2 md:m-0 md:mr-1 h-full">
+             <h3 id="channelsTitleDesktop" class="text-xl font-semibold mb-3 text-gray-400 sticky-sidebar-title"></h3>
              <div id="channelListDesktop">
                  <p id="channelsPlaceholderDesktop" class="text-gray-500 text-sm"></p>
              </div>
@@ -172,8 +185,8 @@
             </div>
         </main>
 
-        <aside id="countrySelectorContainerDesktop" class="hidden md:flex md:flex-col w-64 bg-gray-900 p-3 overflow-y-auto flex-shrink-0 order-3 rounded-lg shadow-md m-2 md:m-0 md:ml-1">
-             <h3 id="countriesTitleDesktop" class="text-xl font-semibold mb-3 text-gray-400 sticky top-0 z-10 bg-gray-900 py-2"></h3>
+         <aside id="countrySelectorContainerDesktop" class="hidden md:flex md:flex-col w-64 bg-gray-900 p-3 overflow-y-auto flex-shrink-0 order-3 rounded-lg shadow-md m-2 md:m-0 md:ml-1 h-full">
+             <h3 id="countriesTitleDesktop" class="text-xl font-semibold mb-3 text-gray-400 sticky-sidebar-title"></h3>
              <div id="countrySelectorDesktop">
                  <p id="countriesPlaceholderDesktop" class="text-gray-500 text-sm"></p>
              </div>
@@ -184,7 +197,8 @@
     <div id="mobilePanel" class="fixed bottom-0 left-0 right-0 z-30 bg-gray-900 border-t-2 border-gray-700 shadow-2xl rounded-t-lg md:hidden">
         <div class="flex flex-col max-h-[70vh]">
              <h3 id="mobilePanelTitle" class="p-4 flex-shrink-0"></h3>
-             <div class="px-4 pb-4 pt-0 overflow-y-auto flex-grow"> <div id="mobilePanelContent"> </div>
+             <div class="px-4 pb-4 pt-0 overflow-y-auto flex-grow">
+                  <div id="mobilePanelContent"> </div>
              </div>
         </div>
     </div>
