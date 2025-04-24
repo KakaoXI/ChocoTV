@@ -20,12 +20,21 @@
 
         /* Stili comuni per bottoni paese e elementi canale */
         .list-item-button {
-            cursor: pointer; padding: 8px 12px; margin-bottom: 4px;
-            border-radius: 6px; transition: background-color 0.2s ease, transform 0.1s ease;
-            display: flex; align-items: center; gap: 10px;
-            font-size: 1rem; line-height: 1.5rem;
+            cursor: pointer;
+            /* MODIFICA: Aumentato padding */
+            padding: 10px 14px;
+            margin-bottom: 5px; /* Leggermente più spazio sotto */
+            border-radius: 6px;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            display: flex;
+            align-items: center;
+            /* MODIFICA: Aumentato gap */
+            gap: 12px;
+            /* MODIFICA: Aumentata dimensione font base */
+            font-size: 1.125rem; /* text-lg */
+            line-height: 1.75rem;
         }
-        .list-item-button span:last-child {
+        .list-item-button span:last-child { /* Nome */
              white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
              flex-grow: 1;
         }
@@ -37,7 +46,10 @@
 
         /* Stile per le bandiere SVG e icone placeholder */
         .flag-icon, .placeholder-icon {
-            width: 1.5em; height: 1.125em; line-height: 1.125em;
+            /* MODIFICA: Icone più grandi */
+            width: 1.75em; /* ~28px se font-size è 1rem */
+            height: 1.3125em; /* Mantiene proporzione 4x3 */
+            line-height: 1.3125em;
             flex-shrink: 0; object-fit: contain; background-color: #4b5563;
             border-radius: 3px;
         }
@@ -45,10 +57,14 @@
 
         /* Stili per selettore qualità */
         .quality-button {
-            background-color: #374151; color: #fb923c; padding: 4px 10px;
+            background-color: #374151; color: #fb923c;
+            /* MODIFICA: Padding leggermente aumentato */
+            padding: 5px 12px;
             margin: 3px; border-radius: 5px; cursor: pointer;
             transition: background-color 0.2s ease, color 0.2s ease;
-            font-size: 0.875rem; border: 1px solid #4b5563;
+            /* MODIFICA: Font leggermente più grande */
+            font-size: 0.95rem; /* Tra sm e base */
+            border: 1px solid #4b5563;
         }
         .quality-button:hover { background-color: #4b5563; color: #fed7aa; }
         .quality-button.active {
@@ -94,12 +110,10 @@
 
         /* Titolo nel pannello mobile */
         #mobilePanelTitle {
-            font-size: 1.125rem; /* text-lg */
-            font-weight: 600; /* font-semibold */
-            color: #9ca3af; /* text-gray-400 */
-            margin-bottom: 0.75rem; /* mb-3 */
-            padding-bottom: 0.5rem; /* pb-2 */
-            border-bottom: 1px solid #374151; /* border-b border-gray-700 */
+            /* MODIFICA: Titolo pannello più grande */
+            font-size: 1.25rem; /* text-xl */
+            font-weight: 600; color: #9ca3af; margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem; border-bottom: 1px solid #374151;
         }
 
     </style>
@@ -117,8 +131,9 @@
 
     <header class="bg-gray-900 shadow-lg p-4 flex items-center justify-between flex-wrap flex-shrink-0 z-20 relative">
         <a href="#" class="flex items-center text-white no-underline">
-            <img src="logo.png" alt="ChocoTV Logo" class="h-8 w-auto mr-2"> <span class="text-xl font-bold mr-2">ChocoTV</span>
-            <span class="bg-gray-700 text-orange-400 text-xs px-2 py-0.5 rounded font-mono">v2.4</span> </a>
+            <img src="logo.png" alt="ChocoTV Logo" class="h-10 w-auto mr-3"> <span class="text-2xl font-bold mr-2">ChocoTV</span>
+            <span class="bg-gray-700 text-orange-400 text-xs px-2 py-0.5 rounded font-mono">v2.5</span>
+        </a>
         <div class="flex items-center space-x-4 text-sm mt-2 sm:mt-0 flex-wrap">
             <span id="listTypeText"><i class="fas fa-clock mr-1"></i> </span>
             <div class="relative inline-block">
@@ -134,7 +149,7 @@
 
     <div class="flex flex-col md:flex-row flex-1 overflow-hidden">
         <aside id="channelListContainerDesktop" class="hidden md:flex md:flex-col w-72 bg-gray-900 p-3 overflow-y-auto flex-shrink-0 order-1 rounded-lg shadow-md m-2 md:m-0 md:mr-1">
-             <h3 id="channelsTitleDesktop" class="text-lg font-semibold mb-3 text-gray-400 sticky top-0 bg-gray-900 py-2 z-10"></h3>
+             <h3 id="channelsTitleDesktop" class="text-xl font-semibold mb-3 text-gray-400 sticky top-0 bg-gray-900 py-2 z-10"></h3>
              <div id="channelListDesktop">
                  <p id="channelsPlaceholderDesktop" class="text-gray-500 text-sm"></p>
              </div>
@@ -146,30 +161,22 @@
                     <span id="videoUnsupportedText"></span>
                 </video>
 
-                <div class="bg-gray-900 p-4 rounded-lg shadow-md mb-4">
+                <div class="bg-gray-900 p-5 rounded-lg shadow-md mb-4">
                      <div class="flex justify-between items-center mb-2">
-                        <div class="channel-info text-xl font-semibold" id="channelTitle"></div>
-                     </div>
-                    <p id="statusMessage" class="statusMessage text-sm text-gray-400 transition-all duration-300"></p>
-                </div>
+                        <div class="channel-info text-2xl font-semibold" id="channelTitle"></div> </div>
+                    <p id="statusMessage" class="statusMessage text-base text-gray-400 transition-all duration-300"></p> </div>
 
-                <div class="bg-gray-900 p-4 rounded-lg shadow-md w-full text-sm mb-4">
-                    <h4 id="detailsTitle" class="text-md font-semibold mb-2 text-gray-400"></h4>
-                    <p id="detailChannelName"></p>
+                <div class="bg-gray-900 p-5 rounded-lg shadow-md w-full text-base mb-4"> <h4 id="detailsTitle" class="text-lg font-semibold mb-2 text-gray-400"></h4> <p id="detailChannelName"></p>
                     <p id="detailChannelGroup" class="mb-3"></p>
                     <div id="qualitySelectorContainer" class="mt-3 border-t border-gray-700 pt-3">
-                         <h5 id="qualityTitle" class="text-sm font-semibold mb-1 text-gray-400"></h5>
-                         <div id="qualitySelector" class="flex flex-wrap gap-1">
-                              <span id="qualityPlaceholder" class="text-xs text-gray-500"></span>
-                         </div>
+                         <h5 id="qualityTitle" class="text-base font-semibold mb-1 text-gray-400"></h5> <div id="qualitySelector" class="flex flex-wrap gap-1">
+                              <span id="qualityPlaceholder" class="text-sm text-gray-500"></span> </div>
                     </div>
                 </div>
 
                  <div class="md:hidden flex justify-around gap-2 mb-2">
-                     <button id="toggleChannelsButton" data-target-panel="mobileChannelsPanel" class="mobile-toggle-button flex-1 bg-gray-700 hover:bg-gray-600 text-gray-200 font-bold py-2 px-4 rounded transition duration-150 ease-in-out">
-                     </button>
-                     <button id="toggleCountriesButton" data-target-panel="mobileCountriesPanel" class="mobile-toggle-button flex-1 bg-gray-700 hover:bg-gray-600 text-gray-200 font-bold py-2 px-4 rounded transition duration-150 ease-in-out">
-                     </button>
+                     <button id="toggleChannelsButton" data-target-panel="mobileChannelsPanel" class="mobile-toggle-button flex-1 bg-gray-700 hover:bg-gray-600 text-gray-200 font-bold py-3 px-4 rounded text-lg transition duration-150 ease-in-out"> </button>
+                     <button id="toggleCountriesButton" data-target-panel="mobileCountriesPanel" class="mobile-toggle-button flex-1 bg-gray-700 hover:bg-gray-600 text-gray-200 font-bold py-3 px-4 rounded text-lg transition duration-150 ease-in-out"> </button>
                  </div>
                  <input class="md:hidden bg-gray-800 text-gray-200 placeholder-gray-400 px-3 py-2 rounded-md border border-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent w-full mb-2" id="searchBoxMobile" type="text">
 
@@ -177,7 +184,7 @@
         </main>
 
         <aside id="countrySelectorContainerDesktop" class="hidden md:flex md:flex-col w-64 bg-gray-900 p-3 overflow-y-auto flex-shrink-0 order-3 rounded-lg shadow-md m-2 md:m-0 md:ml-1">
-             <h3 id="countriesTitleDesktop" class="text-lg font-semibold mb-3 text-gray-400 sticky top-0 bg-gray-900 py-2 z-10"></h3>
+             <h3 id="countriesTitleDesktop" class="text-xl font-semibold mb-3 text-gray-400 sticky top-0 bg-gray-900 py-2 z-10"></h3>
              <div id="countrySelectorDesktop">
                  <p id="countriesPlaceholderDesktop" class="text-gray-500 text-sm"></p>
              </div>
