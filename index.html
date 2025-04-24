@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChocoTV - Lettore M3U</title>
+
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -88,7 +91,7 @@
         .language-option:hover { background-color: #374151; }
         .language-option.selected { background-color: #4b5563; font-weight: bold; }
 
-        /* NUOVO: Titolo nel pannello mobile */
+        /* Titolo nel pannello mobile */
         #mobilePanelTitle {
             font-size: 1.125rem; /* text-lg */
             font-weight: 600; /* font-semibold */
@@ -114,7 +117,7 @@
     <header class="bg-gray-900 shadow-lg p-4 flex items-center justify-between flex-wrap flex-shrink-0 z-20 relative">
         <a href="#" class="flex items-center text-white no-underline">
             <span class="text-xl font-bold mr-2">ChocoTV</span>
-            <span class="bg-gray-700 text-orange-400 text-xs px-2 py-0.5 rounded font-mono">v2.2</span>
+            <span class="bg-gray-700 text-orange-400 text-xs px-2 py-0.5 rounded font-mono">v2.3</span>
         </a>
         <div class="flex items-center space-x-4 text-sm mt-2 sm:mt-0 flex-wrap">
             <span id="listTypeText"><i class="fas fa-clock mr-1"></i> </span>
@@ -535,7 +538,6 @@
             document.title = translate('pageTitle');
             document.getElementById('listTypeText').innerHTML = `<i class="fas fa-clock mr-1"></i> ${translate('listType')}`;
             searchBoxDesktop.placeholder = translate('searchPlaceholder');
-            // CORREZIONE: Assicurati che gli elementi esistano prima di impostare textContent
             const channelsTitleDesktopEl = document.getElementById('channelsTitleDesktop');
             if (channelsTitleDesktopEl) channelsTitleDesktopEl.textContent = translate('channelsTitle');
             const channelsPlaceholderDesktopEl = document.getElementById('channelsPlaceholderDesktop');
@@ -548,19 +550,34 @@
             const videoUnsupportedTextEl = document.getElementById('videoUnsupportedText');
             if (videoUnsupportedTextEl) videoUnsupportedTextEl.textContent = translate('videoUnsupported');
             const channelTitleEl = document.getElementById('channelTitle');
-            if (channelTitleEl) channelTitleEl.textContent = translate('noChannelSelected');
+            // Non aggiornare il titolo se un canale è selezionato
+            if (channelTitleEl && !currentPlayingChannel) channelTitleEl.textContent = translate('noChannelSelected');
             const statusMessageEl = document.getElementById('statusMessage');
-            if (statusMessageEl) statusMessageEl.textContent = translate('statusReady');
+            // Non aggiornare messaggio di stato se c'è un errore o sta caricando
+            if (statusMessageEl && statusMessageEl.textContent === 'Pronto.' || statusMessageEl.textContent === translations['it'].statusReady) {
+                 statusMessageEl.textContent = translate('statusReady');
+            }
             const detailsTitleEl = document.getElementById('detailsTitle');
             if (detailsTitleEl) detailsTitleEl.textContent = translate('detailsTitle');
             const detailChannelNameEl = document.getElementById('detailChannelName');
-            if (detailChannelNameEl) detailChannelNameEl.textContent = `${translate('detailChannelPrefix')} -`;
+            if (detailChannelNameEl) detailChannelNameEl.textContent = `${translate('detailChannelPrefix')} ${currentPlayingChannel ? currentPlayingChannel.name : '-'}`;
             const detailChannelGroupEl = document.getElementById('detailChannelGroup');
-            if (detailChannelGroupEl) detailChannelGroupEl.textContent = `${translate('detailGroupPrefix')} -`;
+            if (detailChannelGroupEl) detailChannelGroupEl.textContent = `${translate('detailGroupPrefix')} ${currentPlayingChannel ? currentPlayingChannel.group : '-'}`;
             const qualityTitleEl = document.getElementById('qualityTitle');
             if (qualityTitleEl) qualityTitleEl.textContent = translate('qualityTitle');
-            const qualityPlaceholderEl = document.getElementById('qualityPlaceholder');
-            if (qualityPlaceholderEl) qualityPlaceholderEl.textContent = translate('qualityPlaceholder');
+            const qualityPlaceholderEl = qualitySelector.querySelector('span'); // Seleziona lo span interno
+            if (qualityPlaceholderEl && qualityPlaceholderEl.textContent.includes(translations['it'].qualityPlaceholder.split(' ')[0])) { // Controlla se è il messaggio di placeholder
+                 qualityPlaceholderEl.textContent = translate('qualityPlaceholder');
+            } else if (qualityPlaceholderEl && qualityPlaceholderEl.textContent.includes(translations['it'].qualityUnique.split(' ')[0])) {
+                 qualityPlaceholderEl.textContent = translate('qualityUnique');
+            } else if (qualityPlaceholderEl && qualityPlaceholderEl.textContent.includes(translations['it'].qualityLoading.split(' ')[0])) {
+                 qualityPlaceholderEl.textContent = translate('qualityLoading');
+            } else if (qualityPlaceholderEl && qualityPlaceholderEl.textContent.includes(translations['it'].qualityNotSupported.split(' ')[0])) {
+                 qualityPlaceholderEl.textContent = translate('qualityNotSupported');
+            } else if (qualityPlaceholderEl && qualityPlaceholderEl.textContent.includes(translations['it'].qualityError.split(' ')[0])) {
+                 qualityPlaceholderEl.textContent = translate('qualityError');
+            }
+
 
             toggleChannelsButton.innerHTML = translate('toggleChannels');
             toggleCountriesButton.innerHTML = translate('toggleCountries');
@@ -578,23 +595,30 @@
             const footerCreatedByEl = document.getElementById('footerCreatedBy');
             if (footerCreatedByEl) footerCreatedByEl.textContent = translate('footerCreatedBy');
 
-            // Aggiorna placeholder se le liste sono già caricate e mostrano il placeholder
              const countryPlaceholderP = countrySelectorDesktop.querySelector('p');
-             if (countryPlaceholderP && countryPlaceholderP.textContent !== translate('noGroupsFoundError')) { // Evita sovrascrittura errore
+             if (countryPlaceholderP && countryPlaceholderP.textContent === translations['it'].countriesPlaceholder) {
                  countryPlaceholderP.textContent = translate('countriesPlaceholder');
-             }
-             const channelPlaceholderP = channelListDesktop.querySelector('p');
-             if (channelPlaceholderP && channelPlaceholderP.textContent !== translate('noChannelsFoundError')) { // Evita sovrascrittura errore
-                 channelPlaceholderP.textContent = translate('channelsPlaceholder');
+             } else if (countryPlaceholderP && countryPlaceholderP.textContent === translations['it'].noGroupsFoundError) {
+                  countryPlaceholderP.textContent = translate('noGroupsFoundError');
+             } else if (countryPlaceholderP && countryPlaceholderP.textContent === translations['it'].errorLoadingList) {
+                  countryPlaceholderP.textContent = translate('errorLoadingList');
              }
 
-             // Aggiorna titolo pannello mobile se aperto
+             const channelPlaceholderP = channelListDesktop.querySelector('p');
+             if (channelPlaceholderP && channelPlaceholderP.textContent === translations['it'].channelsPlaceholder) {
+                  channelPlaceholderP.textContent = translate('channelsPlaceholder');
+             } else if (channelPlaceholderP && channelPlaceholderP.textContent === translations['it'].noChannelsFoundError) {
+                 channelPlaceholderP.textContent = translate('noChannelsFoundError');
+             } else if (channelPlaceholderP && channelPlaceholderP.textContent === translations['it'].noChannelsGroup) {
+                  channelPlaceholderP.textContent = translate('noChannelsGroup');
+             }
+
+
              const mobilePanelTitleEl = document.getElementById('mobilePanelTitle');
              if (mobilePanelTitleEl && mobilePanel.classList.contains('active')) {
                  mobilePanelTitleEl.textContent = translate(currentMobilePanel === 'channels' ? 'channelsTitle' : 'countriesTitle');
              }
 
-             // Rirenderizza le liste attuali per aggiornare il pulsante "Indietro"
              if (currentMobilePanel === 'channels') {
                   const activeCountryButton = activeCountryButtonMobile || activeCountryButtonDesktop;
                   const countryName = activeCountryButton?.querySelector('span:last-child')?.textContent;
@@ -1051,7 +1075,7 @@
         }
 
         /** Apre il pannello mobile */
-        function openMobilePanel(type) {
+        function openMobilePanel(type) { /* ... usa traduzioni ... */
              currentMobilePanel = type;
              mobilePanelContent.innerHTML = ''; // Pulisce prima di aggiungere titolo
              mobilePanelTitle.textContent = translate(type === 'channels' ? 'channelsTitle' : 'countriesTitle'); // Imposta titolo tradotto
