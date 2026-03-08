@@ -642,25 +642,6 @@
 
 
         const m3uUrl = 'index.m3u';
-        const PROXY_URL = 'https://chocotv-proxy.koreanlol99.workers.dev/?url=';
-
-        function proxifyUrl(url) {
-            if (url && url.startsWith('http://')) {
-                return PROXY_URL + encodeURIComponent(url);
-            }
-            return url;
-        }
-
-        // Loader personalizzato che proxifica TUTTE le richieste HTTP (manifest + segmenti)
-        class ProxyLoader extends Hls.DefaultConfig.loader {
-            constructor(config) { super(config); }
-            load(context, config, callbacks) {
-                if (context.url && context.url.startsWith('http://')) {
-                    context.url = PROXY_URL + encodeURIComponent(context.url);
-                }
-                super.load(context, config, callbacks);
-            }
-        }
         let allChannels = {};
         let currentChannels = [];
         let hls;
@@ -967,7 +948,6 @@
               console.log(`Config HLS for: ${channel.url}`);
               if (retryTimeoutId) { clearTimeout(retryTimeoutId); retryTimeoutId = null; }
               hls = new Hls({ /* ... config come prima ... */
-                   loader: ProxyLoader,
                    abrEwmaDefaultEstimate: 500000, startLevel: -1, capLevelToPlayerSize: true,
                    maxBufferLength: 30, maxMaxBufferLength: 60, manifestLoadingMaxRetry: 4,
                    manifestLoadingRetryDelay: 1000, levelLoadingMaxRetry: 4, levelLoadingRetryDelay: 1000,
@@ -1046,7 +1026,7 @@
              setupAndPlayHLS(channel);
              if (!Hls.isSupported() && player.canPlayType('application/vnd.apple.mpegurl')) {
                  console.log(`Native HLS playback attempt: ${channel.url}`);
-                 player.src = proxifyUrl(channel.url);
+                 player.src = channel.url;
                  player.removeEventListener('loadedmetadata', playNative); player.removeEventListener('error', handleNativeError);
                  player.addEventListener('loadedmetadata', playNative); player.addEventListener('error', handleNativeError);
              }
