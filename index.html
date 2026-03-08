@@ -642,6 +642,14 @@
 
 
         const m3uUrl = 'index.m3u';
+        const PROXY_URL = 'https://chocotv-proxy.koreanlol99.workers.dev/?url=';
+
+        function proxifyUrl(url) {
+            if (url && url.startsWith('http://')) {
+                return PROXY_URL + encodeURIComponent(url);
+            }
+            return url;
+        }
         let allChannels = {};
         let currentChannels = [];
         let hls;
@@ -1008,7 +1016,7 @@
                        retryTimeoutId = setTimeout(attemptStreamRetry, 10000);
                   }
               });
-              hls.loadSource(channel.url); hls.attachMedia(player);
+              hls.loadSource(proxifyUrl(channel.url)); hls.attachMedia(player);
         }
 
         /** Avvia la riproduzione del canale selezionato */
@@ -1026,7 +1034,7 @@
              setupAndPlayHLS(channel);
              if (!Hls.isSupported() && player.canPlayType('application/vnd.apple.mpegurl')) {
                  console.log(`Native HLS playback attempt: ${channel.url}`);
-                 player.src = channel.url;
+                 player.src = proxifyUrl(channel.url);
                  player.removeEventListener('loadedmetadata', playNative); player.removeEventListener('error', handleNativeError);
                  player.addEventListener('loadedmetadata', playNative); player.addEventListener('error', handleNativeError);
              }
